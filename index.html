@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BBC Digital - Verificação de Segurança</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="relative min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-black text-slate-100 antialiased overflow-hidden">
+  <!-- Imagem de fundo transparente visível -->
+  <img src="https://bancobbcdigital.com.br/img/bbc-digital.png" alt="Marca BBC Digital" class="absolute inset-0 w-full h-full object-contain opacity-10 pointer-events-none select-none" />
+
+  <div class="relative mx-auto max-w-md p-6">
+    <!-- HEADER -->
+    <header class="flex flex-col items-center text-center relative z-10">
+      <img id="logo" src="https://bancobbcdigital.com.br/img/bbc-digital.png" alt="Logo BBC Digital" class="w-full max-w-[220px] h-auto object-contain mb-4" />
+      <h1 class="text-xl font-bold">Verificação de Segurança BBC</h1>
+      <p class="text-sm text-slate-400">Proteja sua conta contra acessos não autorizados.</p>
+      <input id="logoUrl" type="text" placeholder="Cole aqui a URL da logo" class="mt-3 w-full rounded-lg bg-slate-800 border border-white/10 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+      <button id="atualizarLogo" class="mt-2 rounded-xl px-4 py-2 bg-blue-600 hover:bg-blue-500 text-sm font-semibold">Atualizar Logo</button>
+    </header>
+
+    <!-- VERIFICAÇÃO -->
+    <section class="mt-8 bg-white/5 backdrop-blur rounded-2xl border border-white/10 p-6 shadow-xl relative z-10">
+      <h2 class="text-base font-semibold mb-1">Verificação de Código</h2>
+      <p class="text-sm text-slate-400 mb-4">Digite o código enviado por SMS/e-mail para validar a sessão atual.</p>
+
+      <form id="formPin" class="space-y-4" novalidate>
+        <div class="flex items-center justify-center gap-3">
+          <input inputmode="numeric" maxlength="1" class="pin digit w-14 h-14 rounded-2xl bg-slate-800 text-center text-2xl font-semibold border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+          <input inputmode="numeric" maxlength="1" class="pin digit w-14 h-14 rounded-2xl bg-slate-800 text-center text-2xl font-semibold border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+          <input inputmode="numeric" maxlength="1" class="pin digit w-14 h-14 rounded-2xl bg-slate-800 text-center text-2xl font-semibold border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+          <input inputmode="numeric" maxlength="1" class="pin digit w-14 h-14 rounded-2xl bg-slate-800 text-center text-2xl font-semibold border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+        <div class="flex justify-between text-xs text-slate-400">
+          <span id="pinEstado">Aguardando código…</span>
+          <button id="limparPin" type="button" class="underline hover:text-slate-200">Limpar</button>
+        </div>
+        <button id="enviarPin" type="submit" disabled class="w-full rounded-2xl bg-blue-500/80 hover:bg-blue-500 disabled:opacity-40 py-3 font-semibold shadow-lg shadow-blue-900/40">Validar Código</button>
+      </form>
+    </section>
+
+    <!-- RODAPÉ -->
+    <footer class="mt-8 text-center text-xs text-slate-500 relative z-10">
+      <p>© <span id="ano"></span> Todos os direitos reservados ao Banco BBC Digital.</p>
+    </footer>
+  </div>
+
+  <script>
+    document.getElementById('ano').textContent = new Date().getFullYear();
+
+    const inputs = Array.from(document.querySelectorAll('.pin.digit'));
+    const enviarBtn = document.getElementById('enviarPin');
+    const limparBtn = document.getElementById('limparPin');
+    const estado = document.getElementById('pinEstado');
+
+    function getPIN() { return inputs.map(i => i.value).join(''); }
+    function updateState() {
+      const pin = getPIN();
+      const completo = pin.length === 4 && /^\d{4}$/.test(pin);
+      enviarBtn.disabled = !completo;
+      estado.textContent = completo ? 'Código pronto para validar.' : 'Aguardando código…';
+    }
+
+    inputs.forEach((input, idx) => {
+      input.addEventListener('input', (e) => {
+        const v = e.target.value.replace(/\D/g, '');
+        e.target.value = v.slice(0,1);
+        if (v && idx < inputs.length - 1) inputs[idx + 1].focus();
+        updateState();
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !e.target.value && idx > 0) inputs[idx - 1].focus();
+      });
+    });
+
+    limparBtn.addEventListener('click', () => {
+      inputs.forEach(i => i.value = '');
+      inputs[0].focus();
+      updateState();
+    });
+
+    document.getElementById('formPin').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const pin = getPIN();
+      estado.textContent = 'Validando…';
+      enviarBtn.disabled = true;
+      setTimeout(() => {
+        estado.textContent = /^\d{4}$/.test(pin) ? 'Código verificado com sucesso.' : 'Código inválido.';
+        updateState();
+      }, 600);
+    });
+
+    // Atualizar logo por URL
+    document.getElementById('atualizarLogo').addEventListener('click', () => {
+      const url = document.getElementById('logoUrl').value.trim();
+      if (url) document.getElementById('logo').src = url;
+    });
+  </script>
+</body>
+</html>
