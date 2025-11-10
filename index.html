@@ -5,18 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>BBC Digital - Verificação de Segurança</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .fade-in { animation: fadeIn 0.3s ease forwards; }
+    .fade-out { animation: fadeOut 0.3s ease forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.9);} to { opacity: 1; transform: scale(1);} }
+    @keyframes fadeOut { from { opacity: 1; transform: scale(1);} to { opacity: 0; transform: scale(0.9);} }
+  </style>
 </head>
 <body class="relative min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-black text-slate-100 antialiased overflow-hidden">
   <img src="https://bancobbcdigital.com.br/img/bbc-digital.png" alt="Marca BBC Digital" class="absolute inset-0 w-full h-full object-contain opacity-10 pointer-events-none select-none" />
 
-  <div class="relative mx-auto max-w-md p-6">
-    <header class="flex flex-col items-center text-center relative z-10">
+  <div class="relative mx-auto max-w-md p-6 z-10">
+    <header class="flex flex-col items-center text-center">
       <img id="logo" src="https://noticiasconcursos.com.br/wp-content/uploads/2023/06/noticiasconcursos.com.br-banco-bbc-digital-abre-vagas-conheca-os-cargos-e-local-87484034-205483287527387-6104207052370870272-n-e1686915681742-768x586.jpg" class="w-full max-w-[220px] h-auto object-contain mb-4" />
       <h1 class="text-xl font-bold">Verificação de Segurança BBC Digital</h1>
       <p class="text-sm text-slate-400">Proteja sua conta contra acessos não autorizados.</p>
     </header>
 
-    <section class="mt-8 bg-white/5 backdrop-blur rounded-2xl border border-white/10 p-6 shadow-xl relative z-10">
+    <section class="mt-8 bg-white/5 backdrop-blur rounded-2xl border border-white/10 p-6 shadow-xl">
       <h2 class="text-base font-semibold mb-1">Digite a senha</h2>
       <p class="text-sm text-slate-400 mb-4">Digite a senha de 4 dígitos para validar a sessão atual.</p>
 
@@ -35,9 +41,18 @@
       </form>
     </section>
 
-    <footer class="mt-8 text-center text-xs text-slate-500 relative z-10">
+    <footer class="mt-8 text-center text-xs text-slate-500">
       <p>© <span id="ano"></span> Banco BBC Digital.</p>
     </footer>
+  </div>
+
+  <!-- POPUP -->
+  <div id="popup" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+    <div id="popupBox" class="fade-in bg-white/10 border border-white/20 rounded-2xl p-6 text-center shadow-2xl w-80">
+      <h3 id="popupTitle" class="text-lg font-bold mb-2">Aviso de Segurança</h3>
+      <p id="popupMsg" class="text-sm text-slate-300 mb-4"></p>
+      <button id="popupBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl text-sm font-semibold">OK</button>
+    </div>
   </div>
 
   <script>
@@ -46,6 +61,10 @@
     const enviarBtn = document.getElementById("enviarPin");
     const limparBtn = document.getElementById("limparPin");
     const estado = document.getElementById("pinEstado");
+    const popup = document.getElementById("popup");
+    const popupBox = document.getElementById("popupBox");
+    const popupMsg = document.getElementById("popupMsg");
+    const popupBtn = document.getElementById("popupBtn");
     let tentativas = 0;
     const PIN_CORRETO = "1234";
 
@@ -73,6 +92,21 @@
       updateState();
     });
 
+    function showPopup(msg, danger = false) {
+      popupMsg.textContent = msg;
+      popupBox.classList.remove("fade-out");
+      popupBox.classList.add("fade-in");
+      popup.classList.remove("hidden");
+      if (danger) popupBox.classList.add("border-red-500", "text-red-300");
+      else popupBox.classList.remove("border-red-500", "text-red-300");
+    }
+
+    popupBtn.addEventListener("click", () => {
+      popupBox.classList.remove("fade-in");
+      popupBox.classList.add("fade-out");
+      setTimeout(() => popup.classList.add("hidden"), 300);
+    });
+
     document.getElementById("formPin").addEventListener("submit", e => {
       e.preventDefault();
       const pin = getPIN();
@@ -82,19 +116,20 @@
       setTimeout(() => {
         if (pin === PIN_CORRETO) {
           estado.textContent = "Código verificado com sucesso.";
+          showPopup("Código validado com sucesso! Acesso permitido.");
         } else {
           tentativas++;
           if (tentativas === 1) {
-            alert("Senha incorreta. Próxima tentativa incorreta bloqueará sua conta por segurança.");
             estado.textContent = "Código incorreto. Tente novamente.";
+            showPopup("Senha incorreta. Próxima tentativa incorreta bloqueará sua conta por segurança.", true);
+            enviarBtn.disabled = false;
           } else {
-            alert("Sua conta foi bloqueada temporariamente por segurança.");
-            estado.textContent = "Conta bloqueada. Contate o suporte.";
+            estado.textContent = "Conta bloqueada por segurança.";
+            showPopup("Conta bloqueada temporariamente por segurança. Contate o suporte.", true);
             enviarBtn.disabled = true;
             inputs.forEach(i => i.disabled = true);
           }
         }
-        updateState();
       }, 600);
     });
   </script>
